@@ -229,13 +229,13 @@ def get_example_params(example_index):
     target_class = example_list[example_index][1]
     file_name_to_export = img_path[img_path.rfind('/')+1:img_path.rfind('.')]
     # Read image
-    original_image = Image.open(img_path).convert('RGB')
+    #original_image = Image.open(img_path).convert('RGB')
     # Process image
-    prep_img = preprocess_image(original_image)
+    #prep_img = preprocess_image(original_image)
     # Define model
     
-    PATH = './cifar_net.pth';
-    pretrained_model = models.Net2()
+    PATH = './darts.pth'
+    pretrained_model = models.DARTS()
     pretrained_model.load_state_dict(torch.load(PATH))
 
     #pretrained_model = models.alexnet(pretrained=True)

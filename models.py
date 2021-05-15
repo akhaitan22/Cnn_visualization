@@ -72,35 +72,35 @@ def conv(in_channels, out_channels, kernel_size=3, stride=1, padding=1):
 class DARTS(nn.Module):
     def __init__(self, num_channels=8, n_nodes=5):
         super(DARTS, self).__init__()
-        self.e12 = conv(3, 10)
-        self.e13 = conv(3, 10)
-        self.e14 = conv(3, 10)
-        self.e15 = conv(3, 10)
-        self.e23 = conv(10, 10)
-        self.e24 = conv(10, 10)
-        self.e25 = conv(10, 10)
-        self.e34 = conv(10, 10)
-        self.e35 = conv(10, 10)
-        self.e45 = conv(10, 10)
-        self.fc1 = nn.Linear(3072, 256)
+        self.ec00 = operation.NUM_OPS[2](C = 3, C2 = 10, stride = STRIDE, affine = AFFINE)
+        self.ec01 = operation.NUM_OPS[2](C = 3, C2 = 10, stride = STRIDE, affine = AFFINE)
+        self.ec10 = operation.NUM_OPS[2](C = 3, C2 = 10, stride = STRIDE, affine = AFFINE)
+        self.ec11 = operation.NUM_OPS[2](C = 3, C2 = 10, stride = STRIDE, affine = AFFINE)
+        self.ec12 = operation.NUM_OPS[2](C = 3, C2 = 10, stride = STRIDE, affine = AFFINE)
+        self.e03 = operation.NUM_OPS[5](C = 10, C2 = 10, stride = STRIDE, affine = AFFINE)
+        self.e04 = operation.NUM_OPS[2](C = 10, C2 = 10, stride = STRIDE, affine = AFFINE)
+        self.e14 = operation.NUM_OPS[2](C = 10, C2 = 10, stride = STRIDE, affine = AFFINE)
+        self.e24 = operation.NUM_OPS[2](C = 10, C2 = 10, stride = STRIDE, affine = AFFINE)
+        self.e34 = operation.NUM_OPS[2](C = 10, C2 = 10, stride = STRIDE, affine = AFFINE)
+        self.fc1 = nn.Linear(40960, 256)
         self.fc2 = nn.Linear(256, 10)
 
     def forward(self, x, n_nodes=5):
-        e12 = self.e12(x)
-        e13 = self.e13(x)
-        e14 = self.e14(x)
-        e15 = self.e15(x)
-        e23 = self.e23(e12)
-        e24 = self.e24(e12)
-        e25 = self.e25(e12)
-        e3 = sum([e13, e23])
-        e34 = self.e34(e3)
-        e35 = self.e35(e3)
-        e4 = sum([e14, e24, e34])
-        e45 = self.e45(e4)
-        e5 = torch.cat((e15, e25, e35, e45), dim=1)
-        #print(e5.shape)
-        x = torch.flatten(x, 1)
+        ec00 = self.ec00(x)
+        ec01 = self.ec01(x)
+        ec10 = self.ec10(x)
+        ec11 = self.ec11(x)
+        ec12 = self.ec12(x)
+        e0 = sum([ec00, ec10])
+        e03 = self.e03(e0)
+        e04 = self.e04(e0)
+        e1 = sum([ec01, ec11])
+        e14 = self.e14(e1)
+        e24 = self.e24(ec12)
+        e34 = self.e34(e03)
+        e4 = torch.cat((e04, e14, e24, e34), dim=1)
+        #print(e4.shape)
+        x = torch.flatten(e4, 1)
         #print(x.shape)
         x = self.fc1(x)
         #print(x.shape)
@@ -112,24 +112,24 @@ class Level1Op0(nn.Module):
     def __init__(self, channels_in):
         super(Level1Op0, self).__init__()
         if channels_in == 3:
-            channels_2 = 10
+            c=3
         else:
-            channels_2 = channels_in
-        self.e01 = operation.NUM_OPS[3](C = channels_in, C2 = channels_2, stride = STRIDE, affine = AFFINE)
-        self.e02 = operation.NUM_OPS[2](C = channels_in, C2 = channels_2, stride = STRIDE, affine = AFFINE)
-        self.e03 = operation.NUM_OPS[7](C = channels_in, stride = STRIDE, affine = AFFINE)
-        self.e04 = operation.NUM_OPS[1](C = channels_in, C2 = channels_2, stride = STRIDE, affine = AFFINE)
-        self.e12 = operation.NUM_OPS[7](C = channels_in, stride = STRIDE, affine = AFFINE)
-        self.e13 = operation.NUM_OPS[8](C = channels_in, stride = STRIDE, affine = AFFINE)
-        self.e14 = operation.NUM_OPS[7](C = channels_in, stride = STRIDE, affine = AFFINE)
-        self.e23 = operation.NUM_OPS[3](C = channels_in, C2 = channels_2, stride = STRIDE, affine = AFFINE)
-        self.e24 = operation.NUM_OPS[5](C = channels_in, C2 = channels_2, stride = STRIDE, affine = AFFINE)
-        self.e34 = operation.NUM_OPS[7](C = channels_in, stride = STRIDE, affine = AFFINE)
+            c=10
+        self.e01 = operation.NUM_OPS[3](C = c, C2 = 10, stride = STRIDE, affine = AFFINE)
+        self.e02 = operation.NUM_OPS[2](C = c, C2 = 10, stride = STRIDE, affine = AFFINE)
+        #self.e03 = operation.NUM_OPS[7](C = 3, stride = STRIDE, affine = AFFINE)
+        self.e04 = operation.NUM_OPS[1](C = c, C2 = 10, stride = STRIDE, affine = AFFINE)
+        self.e12 = operation.NUM_OPS[7](C = 10, stride = STRIDE, affine = AFFINE)
+        self.e13 = operation.NUM_OPS[8](C = 10, stride = STRIDE, affine = AFFINE)
+        self.e14 = operation.NUM_OPS[7](C = 10, stride = STRIDE, affine = AFFINE)
+        self.e23 = operation.NUM_OPS[3](C = 10, C2 = 10, stride = STRIDE, affine = AFFINE)
+        self.e24 = operation.NUM_OPS[5](C = 10, C2 = 10, stride = STRIDE, affine = AFFINE)
+        self.e34 = operation.NUM_OPS[7](C = 10, stride = STRIDE, affine = AFFINE)
 
     def forward(self, x):
     	e01 = self.e01(x)
     	e02 = self.e02(x)
-    	e03 = self.e03(x)
+    	#e03 = self.e03(x)
     	e04 = self.e04(x)
     	e12 = self.e12(e01)
     	e13 = self.e13(e01)
@@ -137,32 +137,34 @@ class Level1Op0(nn.Module):
     	e2 = sum([e02, e12])
     	e23 = self.e23(e2)
     	e24 = self.e24(e2)
-    	e3 = sum([e03, e13, e23])
+    	#e3 = sum([e03, e13, e23])
+    	e3 = sum([e13, e23])
     	e34 = self.e34(e3)
-    	return sum([e04, e14, e24, e34])
+    	#return sum([e04, e14, e24, e34])
+    	return sum([e14, e24, e34])
 
 class Level1Op1(nn.Module):
     def __init__(self, channels_in):
         super(Level1Op1, self).__init__()
         if channels_in == 3:
-            channels_2 = 10
+            c=3
         else:
-            channels_2 = channels_in
-        self.e01 = operation.NUM_OPS[2](C = channels_in, C2 = channels_2, stride = STRIDE, affine = AFFINE)
-        self.e02 = operation.NUM_OPS[8](C = channels_in, stride = STRIDE, affine = AFFINE)
-        self.e03 = operation.NUM_OPS[7](C = channels_in, stride = STRIDE, affine = AFFINE)
-        self.e04 = operation.NUM_OPS[4](C = channels_in, C2 = channels_2, stride = STRIDE, affine = AFFINE)
-        self.e12 = operation.NUM_OPS[7](C = channels_in, stride = STRIDE, affine = AFFINE)
-        self.e13 = operation.NUM_OPS[5](C = channels_in, C2 = channels_2, stride = STRIDE, affine=AFFINE)
-        self.e14 = operation.NUM_OPS[5](C = channels_in, C2 = channels_2, stride = STRIDE, affine=AFFINE)
-        self.e23 = operation.NUM_OPS[2](C = channels_in, C2 = channels_2, stride = STRIDE, affine = AFFINE)
-        self.e24 = operation.NUM_OPS[6](C = channels_in, C2 = channels_2, stride = STRIDE, affine = AFFINE)
-        self.e34 = operation.NUM_OPS[4](C = channels_in, C2 = channels_2, stride = STRIDE, affine = AFFINE)
+            c=10
+        self.e01 = operation.NUM_OPS[2](C = c, C2 = 10, stride = STRIDE, affine = AFFINE)
+        #self.e02 = operation.NUM_OPS[8](C = c, stride = STRIDE, affine = AFFINE)
+        #self.e03 = operation.NUM_OPS[7](C = c, stride = STRIDE, affine = AFFINE)
+        self.e04 = operation.NUM_OPS[4](C = c, C2 = 10, stride = STRIDE, affine = AFFINE)
+        #self.e12 = operation.NUM_OPS[7](C = c, stride = STRIDE, affine = AFFINE)
+        self.e13 = operation.NUM_OPS[5](C = 10, C2 = 10, stride = STRIDE, affine=AFFINE)
+        self.e14 = operation.NUM_OPS[5](C = 10, C2 = 10, stride = STRIDE, affine=AFFINE)
+        self.e23 = operation.NUM_OPS[2](C = c, C2 = 10, stride = STRIDE, affine = AFFINE)
+        self.e24 = operation.NUM_OPS[6](C = c, C2 = 10, stride = STRIDE, affine = AFFINE)
+        self.e34 = operation.NUM_OPS[4](C = 10, C2 = 10, stride = STRIDE, affine = AFFINE)
 
     def forward(self, x):
     	e01 = self.e01(x)
     	e02 = self.e02(x)
-    	e03 = self.e03(x)
+    	#e03 = self.e03(x)
     	e04 = self.e04(x)
     	e12 = self.e12(e01)
     	e13 = self.e13(e01)
@@ -170,26 +172,27 @@ class Level1Op1(nn.Module):
     	e2 = sum([e02, e12])
     	e23 = self.e23(e2)
     	e24 = self.e24(e2)
-    	e3 = sum([e03, e13, e23])
+    	e3 = sum([e13, e23])
     	e34 = self.e34(e3)
     	return sum([e04, e14, e24, e34])
 
 class HDARTS(nn.Module):
     def __init__(self, channels_in = 3, n_nodes=5):
         super(HDARTS, self).__init__()
-        self.e01 = Level1Op0(3)
-        self.e02 = Level1Op0(3)
-        self.e12 = Level1Op1(10)
-        self.fc1 = nn.Linear(3072, 256)
+        self.e02 = Level1Op1(3)
+        self.e12 = Level1Op1(3)
+        self.e23 = Level1Op1(10)
+        self.fc1 = nn.Linear(10240, 256)
         self.fc2 = nn.Linear(256, 10)
 
     def forward(self, x, n_nodes=5):
     	print(x.shape)
-    	e01 = self.e01(x)
     	e02 = self.e02(x)
-    	e12 = self.e23(e01)
+    	e12 = self.e12(x)
+    	e2 = sum([e02, e12])
+    	e23 = self.e23(e2)
     	print(x.shape)
-    	x = torch.flatten(x, 1)
+    	x = torch.flatten(e2, 1)
     	print(x.shape)
     	x = self.fc1(x)
     	print(x.shape)
@@ -223,6 +226,8 @@ def train(model, trainloader, optimizer, epochs = 1, criterion = nn.CrossEntropy
 	for epoch in range(epochs):  # loop over the dataset multiple times
 		running_loss = 0.0
 		for i, data in enumerate(trainloader, 0):
+			if(i>200):
+				break
 			inputs, labels = data
 			optimizer.zero_grad()
 			outputs = model(inputs)
@@ -246,13 +251,8 @@ def test(model, testloader):
 		for data in testloader:
 			images, labels = data
 			outputs = model(images)
-			ig = IntegratedGradients(model)
-			baseline=torch.zeros(images.shape)
 			if(total>4):
 				break;
-			attributions, delta = ig.attribute(images, labels, target=0, return_convergence_delta=True)
-			print('IG Attributions:', attributions)
-			print('Convergence Delta:', delta)
 			_, predicted = torch.max(outputs.data, 1)
 			total += labels.size(0)
 			correct += (predicted == labels).sum().item()
@@ -260,11 +260,16 @@ def test(model, testloader):
 
 
 if __name__ == '__main__':
-	PATH = './net.pth'
-	model = Net2()
+	PATH = './darts.pth'
+	model = HDARTS()
 	trainloader, testloader = load_data()
 	optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 	train(model, trainloader, optimizer)
+	for data in testloader:
+			images, labels = data
+			if(True):
+				break
+	#print(images[0,:], labels[0])
 	#model.load_state_dict(torch.load(PATH))
 	print('Finished Training')
 	#torch.save(model.state_dict(), PATH)
